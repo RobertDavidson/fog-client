@@ -351,6 +351,10 @@ namespace FOG {
 			return macs;
 		}
 		
+		public static void EmitMessage(String title, String data) {
+			ioSocket.Emit(title, data);
+		}
+		
 		public static void OpenSocketIO(String address) {
 			var rsa = new OpenSSL.Crypto.RSA();
 			rsa.GenerateKeys(4096, 65537, null, null);

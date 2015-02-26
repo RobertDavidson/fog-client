@@ -1,1 +1,2 @@
 D:\fogproject\bin\DisplayManager.dll
+C:\Users\jbob\Desktop\fog-client\DisplayManager\obj\Release\ResolveAssemblyReference.cache

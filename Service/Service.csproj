@@ -103,6 +103,10 @@
       <Project>{052A6197-798E-428B-99F9-7ABF12280798}</Project>
       <Name>EncryptionHandler</Name>
     </ProjectReference>
+    <ProjectReference Include="..\EventHandler\EventHandler.csproj">
+      <Project>{C1029567-166F-4163-8F99-5E082C8E808A}</Project>
+      <Name>EventHandler</Name>
+    </ProjectReference>
     <ProjectReference Include="..\GreenFOG\GreenFOG.csproj">
       <Project>{337FF5F5-EEE2-443E-8D22-9CA76A09275C}</Project>
       <Name>GreenFOG</Name>

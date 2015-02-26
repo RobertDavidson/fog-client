@@ -15,27 +15,17 @@ namespace FOG{
 		private Thread notificationPipeThread;
 		
 		private List<AbstractModule> modules;
-		private Status status;
-		private int sleepDefaultTime = 60;
 		private PipeServer notificationPipe;
 		private PipeServer servicePipe;
 		
 		private const String LOG_NAME = "Service";
-		
-		//Module status -- used for stopping/starting
-		public enum Status {
-			Broken = 2,
-			Running = 1,
-			Stopped = 0
-		}
 		
 		public FOGService() {
 			//Initialize everything
 			if(CommunicationHandler.GetAndSetServerAddress()) {
 
 				initializeModules();
-				this.threadManager = new Thread(new ThreadStart(serviceLooper));
-				this.status = Status.Stopped;
+				this.threadManager = new Thread(new ThreadStart(serviceThread));
 				
 				//Setup the notification pipe server
 				this.notificationPipeThread = new Thread(new ThreadStart(notificationPipeHandler));
@@ -85,110 +75,52 @@ namespace FOG{
 
 		//Called when the service starts
 		protected override void OnStart(string[] args) {
-			if(!this.status.Equals(Status.Broken)) {
-				this.status = Status.Running;
-				
-				//Start the pipe server
-				this.notificationPipeThread.Priority = ThreadPriority.Normal;
-				this.notificationPipeThread.Start();
-				
-				this.servicePipe.start();
 			
-				//Start the main thread that handles all modules
-				this.threadManager.Priority = ThreadPriority.Normal;
-				this.threadManager.IsBackground = true;
-				this.threadManager.Name = "FOGService";
-				this.threadManager.Start();
-				
-				//Unschedule any old updates
-				ShutdownHandler.UnScheduleUpdate();
-			}
+			//Start the pipe server
+			this.notificationPipeThread.Priority = ThreadPriority.Normal;
+			this.notificationPipeThread.Start();
+			
+			this.servicePipe.start();
+			
+			//Start the main thread that handles all modules
+			this.threadManager.Priority = ThreadPriority.Normal;
+			this.threadManager.IsBackground = true;
+			this.threadManager.Name = "FOGService";
+			this.threadManager.Start();
+			
+			//Unschedule any old updates
+			ShutdownHandler.UnScheduleUpdate();
         }
 		
 		//Load all of the modules
 		private void initializeModules() {
 			this.modules = new List<AbstractModule>();
-			this.modules.Add(new ClientUpdater());
-			this.modules.Add(new TaskReboot());
-			this.modules.Add(new HostnameChanger());
 			this.modules.Add(new SnapinClient());
-			this.modules.Add(new DisplayManager());			
-			this.modules.Add(new HostRegister());
-			this.modules.Add(new GreenFOG());
-			this.modules.Add(new DirCleaner());
-			this.modules.Add(new UserCleanup());
+			
+			foreach(AbstractModule module in this.modules) {
+				foreach(EventHandler.Events trigger in module.getTriggers()) {
+					EventHandler.Subscribe(trigger, module);
+				}
+			}
+
 		}
 		
 		//Called when the service stops
 		protected override void OnStop() {
-			if(!this.status.Equals(Status.Broken))
-				this.status = Status.Stopped;
+
 		}
 		
 		//Run each service
-		private void serviceLooper() {
-			CommunicationHandler.Authenticate();
-			LogHandler.NewLine();
-			//Only run the service if there wasn't a stop or shutdown request
-			while (status.Equals(Status.Running) && !ShutdownHandler.IsShutdownPending() && !ShutdownHandler.IsUpdatePending()) {
-				foreach(AbstractModule module in modules) {
-					if(ShutdownHandler.IsShutdownPending() || ShutdownHandler.IsUpdatePending())
-						break;
-					
-					//Log file formatting
-					LogHandler.NewLine();
-					LogHandler.Divider();
-					
-					try {
-						module.start();
-					} catch (Exception ex) {
-						LogHandler.Log(LOG_NAME, "Failed to start " + module.getName());
-						LogHandler.Log(LOG_NAME, "ERROR: " + ex.Message);
-					}
-					
-					//Log file formatting
-					LogHandler.Divider();
-					LogHandler.NewLine();
-				}
-				
-				
-				if(!ShutdownHandler.IsShutdownPending() && !ShutdownHandler.IsUpdatePending()) {
-					//Once all modules have been run, sleep for the set time
-					int sleepTime = getSleepTime();
-					LogHandler.Log(LOG_NAME, "Sleeping for " + sleepTime.ToString() + " seconds");
-					Thread.Sleep(sleepTime * 1000);
-				}
-			}
+		private void serviceThread() {
+			CommunicationHandler.OpenSocketIO();
+			while(CommunicationHandler.IsSocketOpen()) { }
+
 			
 			if(ShutdownHandler.IsUpdatePending()) {
 				UpdateHandler.beginUpdate(servicePipe);
 			}
 		}
 
-		//Get the time to sleep from the FOG server, if it cannot it will use the default time
-		private int getSleepTime() {
-			LogHandler.Log(LOG_NAME, "Getting sleep duration...");
-			
-			Response sleepResponse = CommunicationHandler.GetResponse("/service/servicemodule-active.php");
-			
-			try {
-				if(!sleepResponse.wasError() && !sleepResponse.getField("#sleep").Equals("")) {
-					int sleepTime = int.Parse(sleepResponse.getField("#sleep"));
-					if(sleepTime >= this.sleepDefaultTime) {
-						return sleepTime;
-					} else {
-						LogHandler.Log(LOG_NAME, "Sleep time set on the server is below the minimum of " + this.sleepDefaultTime.ToString());
-					}
-				}
-			} catch (Exception ex) {
-				LogHandler.Log(LOG_NAME,"Failed to parse sleep time");
-				LogHandler.Log(LOG_NAME,"ERROR: " + ex.Message);				
-			}
-			
-			LogHandler.Log(LOG_NAME,"Using default sleep time");	
-			
-			return this.sleepDefaultTime;			
-		} 
 
 	}
 }

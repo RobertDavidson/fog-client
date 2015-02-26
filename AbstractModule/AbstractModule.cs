@@ -13,7 +13,7 @@ namespace FOG
 		private String moduleName; 
 		private String moduleDescription;
 		private Scope scope;
-		private List<Events> triggers;
+		private List<EventHandler.Events> triggers;
 
 		public enum Scope {
 			User,
@@ -22,7 +22,7 @@ namespace FOG
 
 		protected AbstractModule() {
 			//Define variables
-			this.triggers = new List<Events>();
+			this.triggers = new List<EventHandler.Events>();
 			setName("Generic Module");
 			setDescription("Generic Description");
 			setScope(Scope.System);
@@ -38,10 +38,10 @@ namespace FOG
 		public Scope getScope() { return this.scope; }
 		public void setScope(Scope scope) { this.scope = scope; }
 		
-		public void addTrigger(Events trigger) { this.triggers.Add(trigger); }
-		public List<Events> getTriggers() { return this.triggers; }
+		public void addTrigger(EventHandler.Events trigger) { this.triggers.Add(trigger); }
+		public List<EventHandler.Events> getTriggers() { return this.triggers; }
 		
-		public abstract void onEvent(Events trigger, Dictionary<String, String> data);
+		public abstract void onEvent(EventHandler.Events trigger, Dictionary<String, String> data);
 
 	}
 }

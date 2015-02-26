@@ -10,6 +10,16 @@ namespace FOG
 	/// 
 	public static class EventHandler
 	{
+		public enum Events { 
+			Start, 
+			Update, 
+			Exit, 
+			Server_Connect, 
+			Server_Disconnect, 
+			Server_Message,
+			Snapin,
+			Notification
+		};
 		private static Dictionary<Events, List<EventObserver>> observers = new Dictionary<Events, List<EventObserver>>();
 		
 		public static void Notify(Events trigger, Dictionary<String, String> data) 
@@ -37,16 +47,8 @@ namespace FOG
 				observers[trigger].Remove(observer);
 		}
 		
+		
 	}
 	
-	public enum Events { 
-		Start, 
-		Update, 
-		Exit, 
-		Server_Connect, 
-		Server_Disconnect, 
-		Server_Message,
-		Snapin,
-		Notification
-	};
+
 }

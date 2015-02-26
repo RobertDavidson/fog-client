@@ -6,7 +6,6 @@ using System.IO;
 using System.Net.NetworkInformation;
 using Quobject.SocketIoClientDotNet.Client;
 using System.Security.Cryptography;
-using OpenSSL.Core;
 using OpenSSL.Crypto;
 using Newtonsoft.Json;
 
@@ -22,6 +21,7 @@ namespace FOG {
 		private const String successCode = "#!ok";
 		private const String LOG_NAME = "CommunicationHandler";
 		private static Socket ioSocket;
+		private static volatile Boolean socketOpen = false;
 
 		private static string passkey = "";
 
@@ -351,11 +351,19 @@ namespace FOG {
 			return macs;
 		}
 		
+		public static String DictionaryToJSON(Dictionary<String, String> data) {
+			return JsonConvert.SerializeObject(data);;
+		}
+		
+		public static Dictionary<String, String> JSONToDictionary(String json) {
+			return JsonConvert.DeserializeObject<Dictionary<String, String>>(json);
+		}
+		
 		public static void EmitMessage(String title, String data) {
 			ioSocket.Emit(title, data);
 		}
 		
-		public static void OpenSocketIO(String address) {
+		public static void OpenSocketIO() {
 			var rsa = new OpenSSL.Crypto.RSA();
 			rsa.GenerateKeys(4096, 65537, null, null);
 
@@ -367,8 +375,10 @@ namespace FOG {
 			
 			var auth1MSG = EncryptionHandler.GeneratePassword(256);
 			
-			ioSocket = IO.Socket(address);
+			ioSocket = IO.Socket(GetServerAddress());
 			ioSocket.On(Socket.EVENT_CONNECT, () => {
+			    socketOpen = true;
+			            	
 			    ioSocket.On("auth", (data) => {
 			        var msg = data.ToString();
 					LogHandler.WriteLine(msg);
@@ -426,6 +436,7 @@ namespace FOG {
 					LogHandler.WriteLine("Kicked off server");
 					ioSocket.Disconnect();
 					ioSocket.Close();
+					socketOpen = false;
 			    });	
 			    
 
@@ -436,6 +447,11 @@ namespace FOG {
 		public static void CloseSocketIO() {
 			ioSocket.Disconnect();
 			ioSocket.Close();
-		}	
+		}
+		
+		public static Boolean IsSocketOpen() {
+			return socketOpen;
+		}
+		
 	}
 }

@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -13,11 +12,11 @@ namespace FOG {
 		public SnapinClient():base(){
 			setName("SnapinClient");
 			setDescription("Installs snapins on client computers");
-			addTrigger(Events.Snapin);
+			addTrigger(EventHandler.Events.Snapin);
 		}
 		
-		public override void onEvent(Events trigger, Dictionary<String, String> data) {
-			if(trigger == Events.Snapin) {
+		public override void onEvent(EventHandler.Events trigger, Dictionary<String, String> data) {
+			if(trigger == EventHandler.Events.Snapin) {
 				processSnapin(data);
 			}
 		}
@@ -70,7 +69,7 @@ namespace FOG {
 			notification.Add("Title", "Finished " + data["Name"]);
 			notification.Add("Body",  data["Name"] + " finished installing");
 			notification.Add("Dur",   "10");
-			EventHandler.Notify(Events.Notification, notification);
+			EventHandler.Notify(EventHandler.Events.Notification, notification);
 			
 			return process.ExitCode.ToString();
 			

@@ -13,6 +13,7 @@
 						<File Id="CommunicationHandler" Name="CommunicationHandler.dll" Source="..\bin\CommunicationHandler.dll"/>
 						<File Id="DirCleaner" Name="DirCleaner.dll" Source="..\bin\DirCleaner.dll"/>
 						<File Id="DisplayManager" Name="DisplayManager.dll" Source="..\bin\DisplayManager.dll"/>
+						<File Id="EventManager" Name="EventManager.dll" Source="..\bin\EventManager.dll"/>
 						<File Id="GreenFOG" Name="GreenFOG.dll" Source="..\bin\GreenFOG.dll"/>
 						<File Id="HostnameChanger" Name="HostnameChanger.dll" Source="..\bin\HostnameChanger.dll"/>		
 						<File Id="HostRegister" Name="HostRegister.dll" Source="..\bin\HostRegister.dll"/>		

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using FOG;
 
 namespace FOG
 {
@@ -9,6 +10,6 @@ namespace FOG
 	/// </summary>
 	public interface EventObserver
 	{
-		void onEvent(Events trigger,  Dictionary<String, String> data);
+		void onEvent(EventHandler.Events trigger,  Dictionary<String, String> data);
 	}
 }

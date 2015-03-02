@@ -16,6 +16,9 @@ namespace FOG {
 			setName("DisplayManager");
 			setDescription("hange the resolution of the display");	
 			this.display = new Display();
+			
+			addTrigger(EventHandler.Events.Start);
+			addTrigger(EventHandler.Events.Display);
 		}
 		
 		public override void onEvent(EventHandler.Events trigger, Dictionary<String, String> data) {

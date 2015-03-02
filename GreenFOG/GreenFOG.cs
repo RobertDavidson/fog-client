@@ -13,22 +13,27 @@ namespace FOG {
 		public GreenFOG():base(){
 			setName("GreenFOG");
 			setDescription("Perform cron style power tasks");
+			addTrigger(EventHandler.Events.GreenFOG);
 		}
 		
-		protected override void doWork() {
-			//Get actions
-			Response tasksResponse = CommunicationHandler.GetResponse("/service/greenfog.php?mac=" + CommunicationHandler.GetMacAddresses());
-
-			//Shutdown if a task is avaible and the user is logged out or it is forced
-			if(!tasksResponse.wasError()) {
-				List<String> tasks = CommunicationHandler.ParseDataArray(tasksResponse, "#task", false);
-				
-				//Filter existing tasks
-				tasks = filterTasks(tasks);
-				//Add new tasks
-				createTasks(tasks);
+		public override void onEvent(EventHandler.Events trigger, Dictionary<String, String> data) {
+			if(trigger == EventHandler.Events.GreenFOG) {
+				processData(data);
 			}
-			
+		}
+		
+		
+		private void processData(Dictionary<String, String> data) {
+			// Convert the dictionary to a list
+			var tasks = new List<String>();
+			foreach(String task in data) {
+				tasks.Add(task);
+			}
+				
+			//Filter existing tasks
+			tasks = filterTasks(tasks);
+			//Add new tasks
+			createTasks(tasks);
 		}
 		
 		private List<String> filterTasks(List<String> newTasks) {

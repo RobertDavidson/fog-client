@@ -18,6 +18,7 @@ namespace FOG
 			Server_Message,
 			Snapin,
 			Display,
+			GreenFOG,
 			Notification
 		};
 		private static Dictionary<Events, List<EventObserver>> observers = 

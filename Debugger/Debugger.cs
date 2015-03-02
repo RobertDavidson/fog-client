@@ -1,21 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace FOG {
+	
 	class Program {
+		
 		public static void Main(string[] args) {
-			
 			LogHandler.setConsoleMode(true);
-			CommunicationHandler.GetAndSetServerAddress();
 			
 			LogHandler.NewLine();
-			LogHandler.PaddedHeader("SocketIO");
+			LogHandler.PaddedHeader("Dictionaries");
 			LogHandler.NewLine();
 			
-			CommunicationHandler.OpenSocketIO();
+			var myTest = new Dictionary<String, int>();
+			myTest.Add("Favorite", 24);
+			
+			LogHandler.WriteLine(myTest["Favorite"].ToString());
 
 			Console.ReadLine();
-			//CommunicationHandler.CloseSocketIO();
-			
+
 		}
 	}
 }

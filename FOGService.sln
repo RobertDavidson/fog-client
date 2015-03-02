@@ -42,6 +42,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Debugger", "Debugger\Debugg
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventHandler", "EventHandler\EventHandler.csproj", "{C1029567-166F-4163-8F99-5E082C8E808A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DisplayManager", "DisplayManager\DisplayManager.csproj", "{952FBDDC-89B2-476C-88A3-A39E6748B612}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -128,6 +130,10 @@ Global
 		{C1029567-166F-4163-8F99-5E082C8E808A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1029567-166F-4163-8F99-5E082C8E808A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1029567-166F-4163-8F99-5E082C8E808A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{952FBDDC-89B2-476C-88A3-A39E6748B612}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{952FBDDC-89B2-476C-88A3-A39E6748B612}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{952FBDDC-89B2-476C-88A3-A39E6748B612}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{952FBDDC-89B2-476C-88A3-A39E6748B612}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = Service\Service.csproj

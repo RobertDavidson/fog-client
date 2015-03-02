@@ -18,29 +18,58 @@ namespace FOG {
 			this.display = new Display();
 		}
 		
-		protected override void doWork() {
+		public override void onEvent(EventHandler.Events trigger, Dictionary<String, String> data) {
+			if(trigger == EventHandler.Events.Start) {
+				updateDisplay();
+			} else if(trigger == EventHandler.Events.Display) {
+				if(updateDisplay(data))
+					saveSettings(data);
+			}
+		}
+
+		private void updateDisplay() {
+			var data = new Dictionary<String, String>();
+			data["width"]   = RegistryHandler.GetModuleSetting(getName(), "width");
+			data["height"]  = RegistryHandler.GetModuleSetting(getName(), "height");
+			data["refresh"] = RegistryHandler.GetModuleSetting(getName(), "refresh");
+			updateDisplay(data);
+		}
+		
+		private bool updateDisplay(Dictionary<String, String> data) {
 			display.updateSettings();
 			if(display.settingsLoaded()) {
-				//Get task info
-				Response taskResponse = CommunicationHandler.GetResponse("/service/displaymanager.php?mac=" + CommunicationHandler.GetMacAddresses());
-	
-				if(!taskResponse.wasError()) {
-	
-					try {
-						int x = int.Parse(taskResponse.getField("#x"));
-						int y = int.Parse(taskResponse.getField("#y"));
-						int r = int.Parse(taskResponse.getField("#r"));
-						if(getDisplays().Count > 0)
-							changeResolution(getDisplays()[0], x, y, r);
-						else
-							changeResolution("", x, y, r);
-					} catch (Exception ex) {
-						LogHandler.Log(getName(), "ERROR");
-						LogHandler.Log(getName(), ex.Message);
-					}
+				try {
+					int x = int.Parse(data["width"]);
+					int y = int.Parse(data["height"]);
+					int r = int.Parse(data["refresh"]);
+					if(getDisplays().Count > 0)
+						changeResolution(getDisplays()[0], x, y, r);
+					else
+						changeResolution("", x, y, r);
+					
+					return true;
+				} catch (Exception ex) {
+					LogHandler.Log(getName(), "ERROR");
+					LogHandler.Log(getName(), ex.Message);
 				}
 			} else {
 				LogHandler.Log(getName(), "Settings are not populated; will not attempt to change resolution");
+			}
+			return false;
+		}
+		
+		private void saveSettings(Dictionary<String, String> data) {
+			try {
+				int x = int.Parse(data["width"]);
+				int y = int.Parse(data["height"]);
+				int r = int.Parse(data["refresh"]);
+				
+				RegistryHandler.SetModuleSetting(getName(), "width", x.ToString());
+				RegistryHandler.SetModuleSetting(getName(), "height", y.ToString());
+				RegistryHandler.SetModuleSetting(getName(), "refresh", r.ToString());
+			} catch (Exception ex) {
+				LogHandler.Log(getName(), "ERROR");
+				LogHandler.Log(getName(), ex.Message);				
 			}
 		}
 		
@@ -60,8 +89,8 @@ namespace FOG {
 		}
 		
 		private List<String> getDisplays() {
-			List<String> displays = new List<String>();			
-			ManagementObjectSearcher monitorSearcher = new ManagementObjectSearcher("SELECT * FROM Win32_DesktopMonitor");
+			var displays = new List<String>();			
+			var monitorSearcher = new ManagementObjectSearcher("SELECT * FROM Win32_DesktopMonitor");
 			
 			foreach (ManagementObject monitor in monitorSearcher.Get()) {
 				displays.Add(monitor["Name"].ToString());

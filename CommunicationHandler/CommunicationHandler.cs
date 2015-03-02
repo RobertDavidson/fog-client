@@ -17,6 +17,7 @@ namespace FOG {
 		//Define variables
 		private static String serverAddress = "fog-server";
 		private static Dictionary<String, String> returnMessages = loadReturnMessages();
+		private static Boolean isSet = GetAndSetServerAddress();
 
 		private const String successCode = "#!ok";
 		private const String LOG_NAME = "CommunicationHandler";
@@ -124,11 +125,11 @@ namespace FOG {
 		/// </summary>		
 		public static String GetRawResponse(String postfix) {
 			//ID the service as the new one
-			if(postfix.Contains(".php?")) {
-				postfix = postfix + "&newService=1";
-			} else {
-				postfix = postfix + "?newService=1";
-			}
+			//if(postfix.Contains(".php?")) {
+			//	postfix = postfix + "&newService=1";
+			//} else {
+			//	postfix = postfix + "?newService=1";
+			//}
 			LogHandler.Log(LOG_NAME, "URL: " + GetServerAddress() + postfix );
 			
 			var webClient = new WebClient();

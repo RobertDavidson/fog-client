@@ -11,7 +11,6 @@ namespace FOG {
 		//Define variable
 		private static List<Notification> notifications = new List<Notification>();
 		private static String companyName = "FOG";
-				
 		
 		public static void SetCompanyName(String name) {companyName = name; }
 		public static String GetCompanyName() { return companyName; }		

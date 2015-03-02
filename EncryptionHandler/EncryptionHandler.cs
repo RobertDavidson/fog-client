@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Linq;
 using OpenSSL.Core;
 
+
 namespace FOG {
 	/// <summary>
 	/// Handle all encryption/decryption

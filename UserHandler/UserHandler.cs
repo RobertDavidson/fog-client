@@ -243,6 +243,8 @@ namespace FOG {
 		public static void RemoveWriteProtection(String path) {
 			 DirectoryInfo directoryInfo = new DirectoryInfo(path);
 			 directoryInfo.Attributes &= ~FileAttributes.ReadOnly;
+			 
+
 		}		
 		
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
 
 namespace FOG
 {
@@ -18,18 +17,17 @@ namespace FOG
 			Server_Disconnect, 
 			Server_Message,
 			Snapin,
+			Display,
 			Notification
 		};
-		private static Dictionary<Events, List<EventObserver>> observers = new Dictionary<Events, List<EventObserver>>();
+		private static Dictionary<Events, List<EventObserver>> observers = 
+			new Dictionary<Events, List<EventObserver>>();
 		
 		public static void Notify(Events trigger, Dictionary<String, String> data) 
 		{
-			if(observers.ContainsKey(trigger)) 
-			{
+			if(observers.ContainsKey(trigger)) {
 				foreach(var observer in observers[trigger])
-				{
 					observer.onEvent(trigger, data);
-				}
 			}
 		}
 		

@@ -20,6 +20,7 @@ namespace FOG
 			Display,
 			GreenFOG,
 			Hostname,
+			TaskReboot,
 			Notification
 		};
 		private static Dictionary<Events, List<EventObserver>> observers = 

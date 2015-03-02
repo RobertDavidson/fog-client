@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 
 namespace FOG {
 	/// <summary>
@@ -12,25 +13,30 @@ namespace FOG {
 		public TaskReboot():base(){
 			setName("TaskReboot");
 			setDescription("Reboot if a task is scheduled");
+			addTrigger(EventHandler.Events.TaskReboot);
 			this.notifiedUser = false;
+			
 		}
 		
-		protected override void doWork() {
-			//Get task info
-			Response taskResponse = CommunicationHandler.GetResponse("/service/jobs.php?mac=" + CommunicationHandler.GetMacAddresses());
+		public override void onEvent(EventHandler.Events trigger, Dictionary<String, String> data) {
+			if(trigger == EventHandler.Events.TaskReboot) {
+				processTask(data);
+			}
+		}
+		
+		
+		private void processTask(Dictionary<String, String> data) {
 
 			//Shutdown if a task is avaible and the user is logged out or it is forced
-			if(!taskResponse.wasError()) {
-				LogHandler.Log(getName(), "Restarting computer for task");
-				if(!UserHandler.IsUserLoggedIn() || taskResponse.getField("#force").Equals("1") ) {
-					ShutdownHandler.Restart(getName(), 30);
-				} else if(!taskResponse.wasError() && !this.notifiedUser) {
-					LogHandler.Log(getName(), "User is currently logged in, will try again later");
-					NotificationHandler.CreateNotification(new Notification("Please log off", NotificationHandler.GetCompanyName() + 
+			LogHandler.Log(getName(), "Restarting computer for task");
+			if(!UserHandler.IsUserLoggedIn() || data["force"].Equals("1") ) {
+				ShutdownHandler.Restart(getName(), 30);
+			} else if(!this.notifiedUser) {
+				LogHandler.Log(getName(), "User is currently logged in, will try again later");
+				NotificationHandler.CreateNotification(new Notification("Please log off", NotificationHandler.GetCompanyName() + 
 					                                                        " is attemping to service your computer, please log off at the soonest available time",
 					                                                        60));
-					this.notifiedUser = true;
-				}
+				this.notifiedUser = true;
 			}
 			
 		}

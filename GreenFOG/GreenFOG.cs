@@ -26,7 +26,7 @@ namespace FOG {
 		private void processData(Dictionary<String, String> data) {
 			// Convert the dictionary to a list
 			var tasks = new List<String>();
-			foreach(String task in data) {
+			foreach(String task in data.Values) {
 				tasks.Add(task);
 			}
 				

@@ -40,31 +40,27 @@ namespace FOG {
 		private Dictionary<int, String> adErrors;
 		private int successIndex;
 		private Boolean notifiedUser; //This variable is used to detect if the user has been told their is a pending shutdown
+
 		
-		private const String PASSKEY = "jPlUQRw5vLsrz8I1TuZdWDSiMFqXHtcm";
-		 //Change this to match your passkey for the active directory password
-		//////////////////////////////////////////////////////////////
-		//	     .           .           .           .	           	 //
-		//	   .:;:.       .:;:.       .:;:.       .:;:.           	 //
-		//	 .:;;;;;:.   .:;;;;;:.   .:;;;;;:.   .:;;;;;:.         	 //
-		//	   ;;;;;       ;;;;;       ;;;;;       ;;;;;           	 //
-		//	   ;;;;;       ;;;;;       ;;;;;       ;;;;;           	 //
-		//	   ;;;;;       ;;;;;       ;;;;;       ;;;;;           	 //
-		//	   ;;;;;       ;;;;;       ;;;;;       ;;;;;           	 //
-		//	   ;:;;;       ;:;;;       ;:;;;       ;:;;;           	 //
-		//	   : ;;;       : ;;;       : ;;;       : ;;;           	 //
-		//	     ;:;         ;:;         ;:;         ;:;           	 //
-		//	   . :.;       . :.;       . :.;       . :.;           	 //
-		//	     . :         . :         . :         . :           	 //
-		//	   .   .       .   .       .   .       .   .           	 //
-		//////////////////////////////////////////////////////////////
-    
 		public HostnameChanger():base() {
 			setName("HostnameChanger");
 			setDescription("Rename a host, register with AD, and activate the windows key");		
 			
+			addTrigger(EventHandler.Events.Hostname);
+			addTrigger(EventHandler.Events.Start);
 			setADErrors();
 			this.notifiedUser = false;
+			
+		}
+		
+		public override void onEvent(EventHandler.Events trigger, Dictionary<String, String> data) {
+			if(trigger == EventHandler.Events.Hostname) {
+				applyHostname(data);
+				RegistryHandler.SetModuleSetting(getName(), "hostname", data["hostname"]);
+				RegistryHandler.SetModuleSetting(getName(), "force", data["force"]);
+			} else if(trigger == EventHandler.Events.Start) {
+				applyHostname();
+			}
 		}
 	 
 	    
@@ -77,40 +73,42 @@ namespace FOG {
 	      	
 		}
 		
-		protected override void doWork() {
-			//Get task info
-			Response taskResponse = CommunicationHandler.GetResponse("/service/hostname.php?mac=" + CommunicationHandler.GetMacAddresses() + 
-			                                                         "&moduleid=" + getName().ToLower());
+		private void applyHostname() {
+			var data = new Dictionary<String, String>();
+			data["hostname"] = RegistryHandler.GetModuleSetting(getName(), "hostname");
+			data["force"] = RegistryHandler.GetModuleSetting(getName(), "force");
+			renameComputer(data);
+		}
+		
+		private void applyHostname(Dictionary<String, String> data) {
 			
-			if(!taskResponse.wasError()) {
-				renameComputer(taskResponse);
-				if(!ShutdownHandler.IsShutdownPending())
-					registerComputer(taskResponse);
-				if(!ShutdownHandler.IsShutdownPending())
-					activateComputer(taskResponse);
-			}
+			renameComputer(data);
+			if(!ShutdownHandler.IsShutdownPending())
+				registerComputer(data);
+			if(!ShutdownHandler.IsShutdownPending())
+				activateComputer(data);
 		}
 		
 		//Rename the computer and remove it from active directory
-		private void renameComputer(Response taskResponse) {
-			if(!taskResponse.getField("#hostname").Equals("")) {
-				if(!System.Environment.MachineName.ToLower().Equals(taskResponse.getField("#hostname").ToLower())) {
+		private void renameComputer(Dictionary<String, String> data) {
+			if(!data["hostname"].Equals("")) {
+				if(!System.Environment.MachineName.ToLower().Equals(data["hostname"].ToLower())) {
 				
-					LogHandler.Log(getName(), "Renaming host to " + taskResponse.getField("#hostname"));
-					if(!UserHandler.IsUserLoggedIn() || taskResponse.getField("#force").Equals("1")) {
+					LogHandler.Log(getName(), "Renaming host to " + data["hostname"]);
+					if(!UserHandler.IsUserLoggedIn() || data["force"].Equals("1")) {
 					
 						//First unjoin it from active directory
-			      		unRegisterComputer(taskResponse);		
+			      		unRegisterComputer(data);		
 		
 			      		LogHandler.Log(getName(), "Updating registry");
 						RegistryKey regKey;
 			
 						regKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters", true);
-						regKey.SetValue("NV Hostname", taskResponse.getField("#hostname"));
+						regKey.SetValue("NV Hostname", data["hostname"]);
 						regKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\ComputerName\ActiveComputerName", true);
-						regKey.SetValue("ComputerName", taskResponse.getField("#hostname"));
+						regKey.SetValue("ComputerName", data["hostname"]);
 						regKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName", true);
-						regKey.SetValue("ComputerName", taskResponse.getField("#hostname"));	
+						regKey.SetValue("ComputerName", data["hostname"]);
 						
 						ShutdownHandler.Restart(NotificationHandler.GetCompanyName() + " needs to rename your computer", 10);
 					} else if(!this.notifiedUser) {
@@ -130,20 +128,14 @@ namespace FOG {
 		}
 		
 		//Add a host to active directory
-		private void registerComputer(Response taskResponse) {
-			if(taskResponse.getField("#AD").Equals("1")) { 
+		private void registerComputer(Dictionary<String, String> data) {
+			if(data["AD"].Equals("1")) {
 				LogHandler.Log(getName(), "Adding host to active directory");
-				if(!taskResponse.getField("#ADDom").Equals("") && !taskResponse.getField("#ADUser").Equals("") && 
-				   !taskResponse.getField("#ADPass").Equals("")) {
-				
-					String userPassword = EncryptionHandler.AESDecrypt(taskResponse.getField("#ADPass"), PASSKEY);
+				if(!(data["ADDom"].Equals("")) && !(data["ADUser"].Equals("")) && !(data["ADPass"].Equals(""))) {
 
-					int returnCode = NetJoinDomain(null, taskResponse.getField("#ADDom"), taskResponse.getField("#ADOU"), 
-					                               taskResponse.getField("#ADUser"), userPassword, 
-					                               (JoinOptions.NETSETUP_JOIN_DOMAIN | JoinOptions.NETSETUP_ACCT_CREATE));
+					int returnCode = NetJoinDomain(null, data["ADDom"], data["ADOU"], data["ADUser"], data["ADPass"], (JoinOptions.NETSETUP_JOIN_DOMAIN | JoinOptions.NETSETUP_ACCT_CREATE));
 					if(returnCode == 2224) {
-						returnCode = NetJoinDomain(null, taskResponse.getField("#ADDom"), taskResponse.getField("#ADOU"), 
-						                           taskResponse.getField("#ADUser"), userPassword, JoinOptions.NETSETUP_JOIN_DOMAIN);				
+						returnCode = NetJoinDomain(null, data["ADDom"], data["ADOU"], data["ADUser"], data["ADPass"], JoinOptions.NETSETUP_JOIN_DOMAIN);
 					}
 					
 					//Log the response
@@ -166,12 +158,11 @@ namespace FOG {
 		}
 		
 		//Remove the host from active directory
-		private void unRegisterComputer(Response taskResponse) {
+		private void unRegisterComputer(Dictionary<String, String> data) {
 			LogHandler.Log(getName(), "Removing host from active directory");
-			if(!taskResponse.getField("#ADUser").Equals("") && !taskResponse.getField("#ADPass").Equals("")) {
+			if(!data["ADUser"].Equals("") && !data["ADPass"].Equals("")) {
 				
-				String userPassword = EncryptionHandler.AESDecrypt(taskResponse.getField("#ADPass"), PASSKEY);
-				int returnCode = NetUnjoinDomain(null, taskResponse.getField("#ADUser"), userPassword, UnJoinOptions.NETSETUP_ACCOUNT_DELETE);
+				int returnCode = NetUnjoinDomain(null, data["ADUser"], data["ADPass"], UnJoinOptions.NETSETUP_ACCOUNT_DELETE);
 				
 				//Log the response
 				if(this.adErrors.ContainsKey(returnCode)) {
@@ -188,17 +179,17 @@ namespace FOG {
 		}
 		
 		//Active a computer with a product key
-		private void activateComputer(Response taskResponse) {
-			if(taskResponse.getData().ContainsKey("#Key")) {
+		private void activateComputer(Dictionary<String, String> data) {
+			if(data.ContainsKey("Key")) {
 				LogHandler.Log(getName(), "Activing host with product key");
 				
 				//The standard windows key is 29 characters long -- 5 sections of 5 characters with 4 dashes (5*5+4)
-				if(taskResponse.getField("#Key").Length == 29) {
+				if(data["Key"].Length == 29) {
 					Process process = new Process();
 					
 					//Give windows the new key
 					process.StartInfo.FileName = @"cscript";
-					process.StartInfo.Arguments ="//B //Nologo "  + Environment.SystemDirectory + @"\slmgr.vbs /ipk " + taskResponse.getField("#Key");
+					process.StartInfo.Arguments ="//B //Nologo "  + Environment.SystemDirectory + @"\slmgr.vbs /ipk " + data["Key"];
 					process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
 					process.Start();
 					process.WaitForExit();

@@ -65,12 +65,12 @@ namespace FOG.Modules {
             setADErrors();
             this.notifiedUser = false;
         }
-        private void setADErrors() {
-            this.adErrors = new Dictionary<int, String>();
-            this.successIndex = 0;
-            this.adErrors.Add(this.successIndex, "Success");
+		private void setADErrors() {
+			this.adErrors = new Dictionary<int, String>();
+			this.successIndex = 0;
+			this.adErrors.Add(this.successIndex, "Success");
 			this.adErrors.Add(2, "The OU parameter is not set properly or not working with this current setup");
-            this.adErrors.Add(5, "Access is denied");
+			this.adErrors.Add(5, "Access is denied");
 			this.adErrors.Add(87, "The parameter is incorrect");
 			this.adErrors.Add(110, "The system cannot open the specified object");
 			this.adErrors.Add(1323, "Unable to update the password");

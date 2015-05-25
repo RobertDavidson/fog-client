@@ -10,9 +10,7 @@ namespace CertificateManager
         private const string Name = "CertificateManager";
 
         static void Main(string[] args)
-        {
-            LogHandler.Output = LogHandler.Mode.Console;
-            
+        {            
             if (args.Length != 1) return;
 
             if (args[0].ToLower().Equals("install"))
